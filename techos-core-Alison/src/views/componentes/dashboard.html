@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechOS Core - Dashboard MVC</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Toastify CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <style>
+        body { background-color: #f8f9fa; }
+        .sidebar { min-height: 100vh; background: #343a40; color: #fff; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar / Formulário Lateral -->
+            <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block sidebar collapse p-3">
+                <h4 class="text-white">TechOS Core</h4>
+                <hr>
+                <form id="osForm">
+                    <div class="mb-3">
+                        <label for="tipoUsuario" class="form-label">Tipo de Utilizador</label>
+                        <select class="form-select" id="tipoUsuario" required>
+                            <option value="cliente">Cliente</option>
+                            <option value="tecnico">Técnico</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="nomeUsuario" class="form-label">Nome</label>
+                        <input type="text" class="form-control" id="nomeUsuario" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="descricaoOS" class="form-label">Descrição da OS</label>
+                        <textarea class="form-control" id="descricaoOS" rows="3" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Abrir Chamado</button>
+                </form>
+            </nav>
+
+            <!-- Conteúdo Principal -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+                <h2>Dashboard de Ordens de Serviço</h2>
+                <div class="row my-4">
+                    <div class="col-md-12">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title">Lista de Chamados</h5>
+                                <div class="table-responsive">
+                                    <table class="table table-striped align-middle" id="tabelaOS">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Utilizador</th>
+                                                <th>Descrição</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <!-- Preenchido dinamicamente pelo Controller -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Toastify JS -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <!-- Script Principal -->
+    <script type="module">
+        import { OrdemServicoController } from '../../controllers/OrdemServicoController.js';
+
+        const controller = new OrdemServicoController();
+        
+        console.log("[SINGLETON] GerenciadorOS re-inicializado na View.");
+
+        document.getElementById('osForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const tipo = document.getElementById('tipoUsuario').value;
+            const nome = document.getElementById('nomeUsuario').value;
+            const descricao = document.getElementById('descricaoOS').value;
+
+            const novaOS = controller.processarSubmissao(tipo, { nome, email: `${nome.toLowerCase().replace(/\s+/g, '')}@email.com` }, descricao);
+
+            // Atualizar Tabela Visual
+            const tbody = document.querySelector('#tabelaOS tbody');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${novaOS.id}</td>
+                <td>${novaOS.usuario.nome}</td>
+                <td>${novaOS.descricao}</td>
+                <td><span class="badge bg-warning text-dark">${novaOS.status}</span></td>
+            `;
+            tbody.appendChild(tr);
+
+            // Disparar Biblioteca Toastify
+            Toastify({
+                text: `Ordem de Serviço #${novaOS.id} criada com sucesso!`,
+                duration: 3000,
+                close: true,
+                gravity: "top",
+                position: "right",
+                backgroundColor: "#28a745",
+            }).showToast();
+
+            e.target.reset();
+        });
+    </script>
+</body>
+</html>
